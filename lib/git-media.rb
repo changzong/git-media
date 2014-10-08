@@ -24,8 +24,7 @@ module GitMedia
     self.get_transport
   end
 
-  def self.get_transport
-    transport = `git config git-media.transport`.chomp
+  def self.get_transport_real(transport)
     case transport
     when ""
       raise "git-media.transport not set"
@@ -46,7 +45,12 @@ module GitMedia
       if path === ""
         raise "git-media.scppath not set for scp transport"
       end
-      GitMedia::Transport::Scp.new(user, host, path, port)
+      protocol = GitMedia::Transport::Scp.new(user, host, path, port)
+      if protocol.up?
+        return protocol
+      else
+        self.get_transport_real("s3")
+      end
 
     when "local"
       require 'git-media/transport/local'
@@ -114,6 +118,11 @@ module GitMedia
     else
       raise "Invalid transport #{transport}"
     end
+  end
+
+  def self.get_transport
+    transport = `git config git-media.transport`.chomp
+    self.get_transport_real(transport)
   end
 
   def self.get_pull_transport

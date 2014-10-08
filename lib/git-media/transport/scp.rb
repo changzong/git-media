@@ -23,6 +23,14 @@ module GitMedia
 	end
       end
 
+      def up?()
+        status = `ssh -o ConnectTimeout=1 #{@user}@#{@host} #{@sshport} exit`
+        if status == 0
+          return true
+        end
+        return false
+      end
+
       def exist?(file)
 	if `ssh #{@user}@#{@host} #{@sshport} [ -f "#{file}" ] && echo 1 || echo 0`.chomp == "1"
 	  puts file + " exists"
@@ -62,13 +70,13 @@ module GitMedia
 	puts sha+" upload fail"
         return false
       end
-      
+
       def get_unpushed(files)
         files.select do |f|
           !self.exist?(File.join(@path, f))
         end
       end
-      
+
     end
   end
 end
